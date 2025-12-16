@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  users User[]
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  username     String        @unique
+  fullName     String?
+  passwordHash String
+  roleId       Int
+  createdAt    DateTime      @default(now())
+  transactions Transaction[]
+  role         Role          @relation(fields: [roleId], references: [id])
+}
+
+model Product {
+  id          Int               @id @default(autoincrement())
+  sku         String?           @unique
+  name        String
+  price       Decimal           @db.Decimal(10, 2)
+  stock       Int               @default(0)
+  description String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  imageUrl    String?
+  recipes     ProductRecipe[]
+  items       TransactionItem[]
+}
+
+model RawMaterial {
+  id          Int             @id @default(autoincrement())
+  code        String?         @unique
+  name        String
+  stock       Decimal         @db.Decimal(10, 2)
+  unit        String          @default("pcs")
+  costPerUnit Decimal?        @db.Decimal(10, 2)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  recipes     ProductRecipe[]
+}
+
+model ProductRecipe {
+  id            Int         @id @default(autoincrement())
+  productId     Int
+  rawMaterialId Int
+  qtyNeeded     Decimal     @db.Decimal(10, 2)
+  product       Product     @relation(fields: [productId], references: [id])
+  rawMaterial   RawMaterial @relation(fields: [rawMaterialId], references: [id])
+}
+
+model Transaction {
+  id           Int               @id @default(autoincrement())
+  invoiceNo    String            @unique
+  userId       Int?
+  totalAmount  Decimal           @db.Decimal(10, 2)
+  paidAmount   Decimal           @db.Decimal(10, 2)
+  changeAmount Decimal           @db.Decimal(10, 2)
+  status       String            @default("COMPLETED")
+  createdAt    DateTime          @default(now())
+  user         User?             @relation(fields: [userId], references: [id])
+  items        TransactionItem[]
+}
+
+model TransactionItem {
+  id            Int         @id @default(autoincrement())
+  transactionId Int
+  productId     Int?
+  qty           Int
+  unitPrice     Decimal     @db.Decimal(10, 2)
+  subtotal      Decimal     @db.Decimal(10, 2)
+  product       Product?    @relation(fields: [productId], references: [id])
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+}
+
+//
+// ====================
+// PEGAWAI & SHIFT
+// ====================
+//
+
+model Shift {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  startTime String
+  endTime   String
+  employees Employee[]
+  createdAt DateTime  @default(now())
+}
+
+model Employee {
+  id        Int      @id @default(autoincrement())
+  fullName  String
+  position  String
+  phone     String?
+  salary    Decimal   @db.Decimal(10,2)
+  joinedAt  DateTime  @default(now())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  shiftId   Int?
+  shift     Shift?    @relation(fields: [shiftId], references: [id])
+}

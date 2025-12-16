@@ -3,11 +3,9 @@ import { PrismaClient } from "@prisma/client";
 import formidable from "formidable";
 import * as XLSX from "xlsx";
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
 
 const prisma = new PrismaClient();
 
